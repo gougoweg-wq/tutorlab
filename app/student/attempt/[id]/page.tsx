@@ -11,5 +11,7 @@ export default async function AttemptPage({ params }: { params: Promise<{ id: st
   if (!a) notFound();
   if (a.submitted) redirect(`/student/attempt/${id}/result`);
   return <Player attemptId={a.id} title={a.title} deadlineAt={a.deadlineAt} serverNow={a.serverNow}
-    questions={a.questions.map((q) => ({ versionId: q.versionId, stemHtml: renderRich(q.stemMd), expectedValues: q.expectedValues, unit: q.unit, draft: q.draft?.type === "numeric" ? q.draft.raw : "" }))} />;
+    questions={a.questions.map((q) => ({ versionId: q.versionId, type: q.type === "single_choice" ? "single_choice" as const : "numeric" as const, stemHtml: renderRich(q.stemMd), expectedValues: q.expectedValues, unit: q.unit,
+      choices: q.options?.kind === "choices" ? q.options.choices.map((c) => ({ id: c.id, html: renderRich(c.text) })) : undefined,
+      draft: q.draft?.type === "numeric" ? q.draft.raw : q.draft?.type === "single_choice" ? (q.draft.choice ?? "") : "" }))} />;
 }

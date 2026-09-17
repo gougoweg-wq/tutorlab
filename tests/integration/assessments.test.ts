@@ -78,3 +78,20 @@ describe("assessment flow", () => {
     await expect(svc.getResult(ctx2(), attemptId)).rejects.toMatchObject({ code: "not_found" });
   });
 });
+
+describe("mastery after grading", () => {
+  it("records mastery once and stays identical when re-run (idempotent rebuild)", async () => {
+    const { recordAttempt } = await import("@/modules/mastery/service");
+    const snap = async () => rows<{ theta: number; n: number }>(await db.execute(sql`select theta, n_attempts as n from mastery where student_id = ${s1} order by topic_id`));
+    const first = await snap(); expect(first.length).toBeGreaterThan(0); expect(first[0].n).toBe(5);
+    const [att] = rows<{ id: string }>(await db.execute(sql`select id from attempts where student_id = ${s1} limit 1`));
+    await recordAttempt(att.id); await recordAttempt(att.id);
+    expect(await snap()).toEqual(first);
+    const ev = rows<{ c: number }>(await db.execute(sql`select count(*)::int c from mastery_events where student_id = ${s1}`))[0].c; expect(ev).toBe(5);
+    const act = rows<{ n: number }>(await db.execute(sql`select items_answered as n from activity_days where student_id = ${s1}`)); expect(act).toEqual([{ n: 5 }]);
+  });
+  it("RLS: a student reads only their own mastery", async () => {
+    expect(await withUser("stu2", async (tx) => rows(await tx.execute(sql`select 1 from mastery`)).length)).toBe(0);
+    expect(await withUser("stu1", async (tx) => rows(await tx.execute(sql`select 1 from mastery`)).length)).toBeGreaterThan(0);
+  });
+});

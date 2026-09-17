@@ -37,7 +37,7 @@ async function main() {
     for (const g of listGenerators()) {
       const tag = `gen:${g.id}`;
       const has = rows<{ c: number }>(await db.execute(sql`select count(*)::int c from questions where workspace_id is null and ${tag} = any(tags)`))[0].c;
-      if (has > 0 || (!g.isSat && mathSeeded)) continue;
+      if (has > 0 || (!g.isSat && !g.id.endsWith("-mc") && mathSeeded)) continue;
       const drafts: ReturnType<typeof generateOne>[] = [];
       for (let i = 0; i < PER_GENERATOR * 3 && drafts.length < PER_GENERATOR; i++) {
         const d = generateOne(g.id, { seed: 1000 + i, difficulty: 2 + (i % 3) }); d.tags = [...d.tags, tag]; const h = contentHash(d.stemMd) + "|" + d.stemMd;

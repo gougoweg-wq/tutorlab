@@ -1,1 +1,27 @@
-{}
+{
+  "title": "Progress",
+  "lead": "A map of what you really know. It accounts for difficulty and how long ago you practised.",
+  "overall": "Overall level",
+  "answered": "Problems solved",
+  "streak": "Day streak",
+  "sat": "SAT Math forecast",
+  "satNote": "estimate from topics, ±{n}",
+  "next": "Your next goal",
+  "nextGo": "Practise",
+  "map": "Topic map",
+  "weak": "Weak topics",
+  "strong": "Strong topics",
+  "review": "Time to review",
+  "none": "Nothing yet",
+  "status_weak": "weak",
+  "status_strong": "strong",
+  "status_in_progress": "in progress",
+  "status_low_data": "not enough data",
+  "lowHint": "solve {n} more",
+  "ago": "{n} d ago",
+  "emptyTitle": "The map appears after your first work",
+  "emptyText": "Finish a test or a practice set and your strong and weak topics will show up here.",
+  "emptyGo": "Go to practice",
+  "sat_group": "SAT Math",
+  "legend": "Colour shows status, the number is the level from 0 to 100"
+}

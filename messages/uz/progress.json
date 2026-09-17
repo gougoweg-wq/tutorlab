@@ -1,1 +1,27 @@
-{}
+{
+  "title": "Natijalar",
+  "lead": "Haqiqatan nimani bilishing xaritasi. Masala qiyinligi va vaqtni hisobga oladi.",
+  "overall": "Umumiy daraja",
+  "answered": "Yechilgan masalalar",
+  "streak": "Ketma-ket kunlar",
+  "sat": "SAT Math prognozi",
+  "satNote": "mavzular boʻyicha baho, ±{n}",
+  "next": "Keyingi maqsading",
+  "nextGo": "Mashq qilish",
+  "map": "Mavzular xaritasi",
+  "weak": "Kuchsiz mavzular",
+  "strong": "Kuchli mavzular",
+  "review": "Takrorlash vaqti",
+  "none": "Hozircha boʻsh",
+  "status_weak": "kuchsiz",
+  "status_strong": "kuchli",
+  "status_in_progress": "jarayonda",
+  "status_low_data": "maʼlumot kam",
+  "lowHint": "yana {n} ta yech",
+  "ago": "{n} kun oldin",
+  "emptyTitle": "Xarita birinchi ishdan keyin paydo boʻladi",
+  "emptyText": "Test yoki mashqni yakunla, kuchli va kuchsiz mavzularing shu yerda koʻrinadi.",
+  "emptyGo": "Mashqqa oʻtish",
+  "sat_group": "SAT Math",
+  "legend": "Rang holatni, son 0 dan 100 gacha darajani bildiradi"
+}

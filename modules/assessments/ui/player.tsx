@@ -12,7 +12,7 @@ import { ProgressBar } from "@/ui/states";
 import { Dialog, DialogContent, DialogClose } from "@/ui/dialog";
 import { cn } from "@/ui/cn";
 
-type Q = { versionId: string; stemHtml: string; expectedValues?: number; unit?: string; draft: string };
+type Q = { versionId: string; type: "numeric" | "single_choice"; choices?: { id: string; html: string }[]; stemHtml: string; expectedValues?: number; unit?: string; draft: string };
 type SaveState = "saved" | "saving" | "offline";
 
 export function Player({ attemptId, title, questions, deadlineAt, serverNow }: { attemptId: string; title: string; questions: Q[]; deadlineAt: string | null; serverNow: string }) {
@@ -36,14 +36,15 @@ export function Player({ attemptId, title, questions, deadlineAt, serverNow }: {
     const ids = [...dirty.current]; if (!ids.length) return true;
     setState("saving");
     for (const id of ids) {
-      const payload: AnswerPayload = { type: "numeric", raw: latest.current[id] ?? "" };
+      const kind = questions.find((q) => q.versionId === id)?.type ?? "numeric";
+      const payload: AnswerPayload = kind === "single_choice" ? { type: "single_choice", choice: latest.current[id] || null } : { type: "numeric", raw: latest.current[id] ?? "" };
       const res = await saveAnswerAction(attemptId, id, payload).catch(() => null);
       if (!res) { setState("offline"); return false; }
       if (!res.ok) { if (res.error.code === "already_submitted" || res.error.code === "deadline_passed") { router.replace(`/student/attempt/${attemptId}/result`); return false; } toast.error(te(res.error.code)); setState("offline"); return false; }
       dirty.current.delete(id);
     }
     setState("saved"); return true;
-  }, [attemptId, router, te]);
+  }, [attemptId, questions, router, te]);
 
   const change = (id: string, v: string) => {
     setValues((p) => { const n = { ...p, [id]: v }; try { localStorage.setItem(lsKey, JSON.stringify(n)); } catch { /* ignore */ } return n; });
@@ -80,10 +81,23 @@ export function Player({ attemptId, title, questions, deadlineAt, serverNow }: {
           <Card key={q.versionId} className="p-5 sm:p-7 rise" style={{ "--i": Math.min(i, 6) } as React.CSSProperties}>
             <div className="grid place-items-center size-8 rounded-full bg-accent-soft text-accent-text text-[14px] font-semibold tnum">{i + 1}</div>
             <div className="rich mt-3 text-[19px] sm:text-[20px] leading-relaxed" dangerouslySetInnerHTML={{ __html: q.stemHtml }} />
+            {q.type === "single_choice" ? (
+              <div role="radiogroup" aria-label={t("answer")} className="mt-5 grid sm:grid-cols-2 gap-2.5">
+                {(q.choices ?? []).map((c, k) => { const on = values[q.versionId] === c.id; return (
+                  <button key={c.id} type="button" role="radio" aria-checked={on} onClick={() => change(q.versionId, c.id)}
+                    onKeyDown={(e) => { const dir = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : e.key === "ArrowUp" || e.key === "ArrowLeft" ? -1 : 0; if (!dir) return; e.preventDefault(); const list = q.choices ?? []; const nx = list[(k + dir + list.length) % list.length]; change(q.versionId, nx.id); (e.currentTarget.parentElement?.children[(k + dir + list.length) % list.length] as HTMLElement | undefined)?.focus(); }}
+                    tabIndex={on || (!values[q.versionId] && k === 0) ? 0 : -1}
+                    className={cn("flex items-center gap-3 min-h-[56px] px-4 rounded-lg border text-left text-[18px] transition-[background-color,border-color,transform] duration-200 ease-apple active:scale-[0.99]", on ? "border-accent bg-accent-soft" : "border-line-strong hover:bg-surface-2")}>
+                    <span className={cn("grid place-items-center size-7 shrink-0 rounded-full border text-[13px] font-semibold uppercase transition-colors", on ? "bg-accent border-accent text-accent-ink" : "border-line-strong text-muted")}>{c.id}</span>
+                    <span className="rich" dangerouslySetInnerHTML={{ __html: c.html }} />
+                  </button>); })}
+              </div>
+            ) : (<>
             <label htmlFor={`a-${i}`} className="block t-caption mt-5 mb-1.5">{t("answer")}{q.unit ? `, ${q.unit}` : ""}</label>
             <Input id={`a-${i}`} value={values[q.versionId] ?? ""} onChange={(e) => change(q.versionId, e.target.value)} autoComplete="off" autoCapitalize="off" spellCheck={false} className="h-12 text-[18px] font-mono max-w-sm"
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const nx = document.getElementById(`a-${i + 1}`); if (nx) nx.focus(); else setConfirm(true); } }} />
             {(q.expectedValues ?? 1) > 1 && <p className="t-caption mt-1.5">{t("hintMany")}</p>}
+            </>)}
           </Card>
         ))}
       </div>

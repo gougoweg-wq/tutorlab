@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Users } from "lucide-react";
 import { asc, eq } from "drizzle-orm";
@@ -20,7 +21,7 @@ export default async function StudentsPage() {
       {!list.length ? <Card className="rise"><EmptyState icon={<Users />} title={t("emptyTitle")} text={t("emptyText")} action={<AddStudent />} /></Card> : (
         <TableWrap className="rise"><Table><thead><tr><Th>{t("name")}</Th><Th>{t("grade")}</Th><Th>{t("status")}</Th><Th /></tr></thead>
           <tbody>{list.map((s) => (
-            <Tr key={s.id}><Td className="font-medium">{s.displayName}</Td><Td>{c("grade", { grade: s.grade })}</Td>
+            <Tr key={s.id}><Td className="font-medium"><Link href={`/tutor/students/${s.id}`} className="text-accent-text hover:underline">{s.displayName}</Link></Td><Td>{c("grade", { grade: s.grade })}</Td>
               <Td>{s.userId ? <Badge tone="ok">{t("active")}</Badge> : <Badge tone="warn">{t("invited")}</Badge>}</Td>
               <Td className="text-right">{!s.userId && <InviteButton studentId={s.id} />}</Td></Tr>))}</tbody></Table></TableWrap>
       )}
