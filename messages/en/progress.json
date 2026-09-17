@@ -23,5 +23,11 @@
   "emptyText": "Finish a test or a practice set and your strong and weak topics will show up here.",
   "emptyGo": "Go to practice",
   "sat_group": "SAT Math",
-  "legend": "Colour shows status, the number is the level from 0 to 100"
+  "legend": "Colour shows status, the number is the level from 0 to 100",
+  "timeline": "Weekly trend",
+  "timelineY": "Share of correct answers per week, %",
+  "reason_weak": "weak topic",
+  "reason_prerequisite": "foundation first: “{topic}” depends on it",
+  "reason_in_progress": "almost there, needs consolidation",
+  "reason_review": "not reviewed for a while"
 }

@@ -30,3 +30,19 @@ describe("mastery model (docs/MASTERY-MODEL.md §8)", () => {
     expect(hi.score).toBeLessThanOrEqual(800); expect(lo.score).toBeGreaterThanOrEqual(200); expect(hi.margin).toBeGreaterThanOrEqual(40); expect(satSectionScore([], "math")).toBeNull();
   });
 });
+
+import { recommend, type TopicMastery } from "@/modules/mastery/queries";
+const tm = (id: string, status: TopicMastery["status"], ciHigh: number): TopicMastery => ({ topicId: id, code: id, name: id, grade: 8, isSat: false, parentId: null, depth: 1, n: 8, mastery: ciHigh - 10, ciLow: ciHigh - 25, ciHigh, status, forgetting: false, ageDays: 0, due: false });
+describe("recommendation (§5, scenario 7)", () => {
+  it("replaces a weak topic by its weak prerequisite, following the chain", () => {
+    const r = recommend([tm("quadratics", "weak", 30), tm("roots", "weak", 50), tm("powers", "weak", 55), tm("fractions", "strong", 95)], [{ topicId: "quadratics", requiresId: "roots" }, { topicId: "roots", requiresId: "powers" }, { topicId: "quadratics", requiresId: "fractions" }]);
+    expect(r).toMatchObject({ reason: "prerequisite", unlocks: "quadratics" }); expect(r!.topic.topicId).toBe("powers");
+  });
+  it("keeps the weak topic when its prerequisites are fine, and survives cycles", () => {
+    expect(recommend([tm("a", "weak", 30), tm("b", "strong", 95)], [{ topicId: "a", requiresId: "b" }])!.topic.topicId).toBe("a");
+    expect(recommend([tm("a", "weak", 30), tm("b", "weak", 40)], [{ topicId: "a", requiresId: "b" }, { topicId: "b", requiresId: "a" }])).toBeTruthy();
+  });
+  it("falls back to in-progress, then review, then nothing", () => {
+    expect(recommend([tm("x", "in_progress", 70)], [])!.reason).toBe("in_progress"); expect(recommend([tm("x", "low_data", 70)], [])).toBeNull();
+  });
+});

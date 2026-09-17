@@ -14,6 +14,8 @@ type StudentCtx = { user: { id: string }; workspaceId: string; studentId: string
 type TutorCtx = { user: { id: string }; workspaceId: string };
 
 /** Candidate question versions for one rule: topic (+subtree by code prefix), difficulty, published, global or own. */
+const typeList = (types: string[] | null | undefined) => (types?.length ? types.join(",") : null);
+
 async function pickForRule(exec: Executor, workspaceId: string, studentId: string, rule: BlueprintRule, exclude: Set<string>): Promise<string[]> {
   const [topic] = await exec.select({ code: schema.topics.code }).from(schema.topics).where(eq(schema.topics.id, rule.topicId));
   if (!topic) throw new AppError("not_found");
@@ -25,6 +27,7 @@ async function pickForRule(exec: Executor, workspaceId: string, studentId: strin
     from questions q join question_topics qt on qt.question_id = q.id join topics t on t.id = qt.topic_id
     where (t.code = ${topic.code} or t.code like ${like}) and q.status = 'published' and q.deleted_at is null and q.current_version_id is not null
       and q.difficulty between ${rule.difficultyMin} and ${rule.difficultyMax}
+      and (${typeList(rule.types)}::text is null or q.type::text = any(string_to_array(${typeList(rule.types)}, ',')))
       and (q.workspace_id is null or q.workspace_id = ${workspaceId})
     order by seen asc, random() limit ${rule.count + exclude.size + 20}`));
   const out: string[] = [];
@@ -33,12 +36,12 @@ async function pickForRule(exec: Executor, workspaceId: string, studentId: strin
   return out;
 }
 
-export async function countForRule(workspaceId: string, topicId: string, dmin: number, dmax: number): Promise<number> {
+export async function countForRule(workspaceId: string, topicId: string, dmin: number, dmax: number, types: string[] | null = null): Promise<number> {
   const db = await getDb();
   const [topic] = await db.select({ code: schema.topics.code }).from(schema.topics).where(eq(schema.topics.id, topicId));
   if (!topic) return 0;
   return rows<{ c: number }>(await db.execute(sql`select count(distinct q.id)::int c from questions q join question_topics qt on qt.question_id=q.id join topics t on t.id=qt.topic_id
-    where (t.code=${topic.code} or t.code like ${topic.code + ".%"}) and q.status='published' and q.deleted_at is null and q.difficulty between ${dmin} and ${dmax} and (q.workspace_id is null or q.workspace_id=${workspaceId})`))[0]?.c ?? 0;
+    where (t.code=${topic.code} or t.code like ${topic.code + ".%"}) and q.status='published' and q.deleted_at is null and q.difficulty between ${dmin} and ${dmax} and (${typeList(types)}::text is null or q.type::text = any(string_to_array(${typeList(types)}, ','))) and (q.workspace_id is null or q.workspace_id=${workspaceId})`))[0]?.c ?? 0;
 }
 
 export async function createBlueprintAssignment(input: PracticeInput): Promise<{ assessmentId: string; assignmentId: string }> {

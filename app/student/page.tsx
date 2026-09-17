@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { Inbox } from "lucide-react";
+import { Inbox, Video } from "lucide-react";
 import { requireStudentPage } from "@/modules/auth/context";
 import { listForStudent } from "@/modules/assessments/service";
+import { upcomingForStudent } from "@/modules/lessons/service";
 import { Card } from "@/ui/card";
 import { Badge } from "@/ui/badge";
 import { Button } from "@/ui/button";
@@ -13,12 +14,17 @@ export default async function StudentToday() {
   const ctx = await requireStudentPage();
   const t = await getTranslations("attempt"); const c = await getTranslations("common"); const f = await getFormatter();
   const list = await listForStudent(ctx);
+  const tl = await getTranslations("lessons"); const lessons = await upcomingForStudent(ctx.studentId);
   const now = Date.now();
   const todo = list.filter((a) => a.bestPercent === null || a.inProgressId);
   const done = list.filter((a) => a.bestPercent !== null && !a.inProgressId);
   return (
     <div>
       <header className="mb-8 rise"><h1 className="t-display">{t("todayTitle", { name: ctx.user.name.split(" ")[0] })}</h1><p className="t-lead mt-2">{t("todayLead")}</p></header>
+      {!!lessons.length && <section className="mb-10 rise"><h2 className="t-h2 mb-4">{tl("studentTitle")}</h2><div className="grid gap-3 sm:grid-cols-2">{lessons.map((l) => (
+        <Card key={l.id} className="p-5"><div className="text-[17px] font-semibold tnum">{f.dateTime(new Date(l.startsAt), { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
+          <div className="mt-1 t-small text-muted">{l.topics.join(", ") || `${l.durationMin} ${tl("min")}`}</div>
+          {l.callUrl && <a href={l.callUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-[14px] text-accent-text hover:underline"><Video className="size-4" />{tl("join")}</a>}</Card>))}</div></section>}
       {!list.length && <Card className="rise"><EmptyState icon={<Inbox />} title={t("emptyTitle")} text={t("emptyText")} /></Card>}
       {!!todo.length && <section className="mb-10"><h2 className="t-h2 mb-4">{t("todo")}</h2><div className="grid gap-3">{todo.map((a, i) => { const overdue = a.dueAt && new Date(a.dueAt).getTime() < now; return (
         <Card key={a.id} interactive className="p-5 sm:p-6 flex flex-wrap items-center gap-4 rise" style={{ "--i": i } as React.CSSProperties}>

@@ -4,6 +4,7 @@ import { getDb, closeDb, schema, rows } from "@/db/client";
 import { TOPICS } from "@/modules/generators/legacy";
 import { listGenerators, generateOne, topicCodeOf } from "@/modules/generators";
 import { SAT_TOPICS } from "@/modules/generators/sat";
+import { PREREQS } from "./prereqs";
 import { insertQuestion } from "@/modules/questions/repo";
 import { contentHash } from "@/modules/questions/normalize";
 
@@ -29,7 +30,9 @@ async function main() {
   if (!sat) [sat] = await db.insert(schema.subjects).values({ code: "SAT", name: { ru: "SAT", en: "SAT", uz: "SAT" }, sort: 9 }).returning();
   if (!existing.has("SAT.MATH")) { const [r] = await db.insert(schema.topics).values({ subjectId: sat.id, code: "SAT.MATH", name: { ru: "SAT Math", en: "SAT Math" }, grade: 12, depth: 0, sort: 100, isSat: true }).returning(); existing.set("SAT.MATH", r.id); }
   for (const [i, t] of SAT_TOPICS.entries()) if (!existing.has(t.code)) { const [r] = await db.insert(schema.topics).values({ subjectId: sat.id, parentId: existing.get("SAT.MATH")!, code: t.code, name: { ru: t.name, en: t.name }, grade: 12, depth: 1, sort: 101 + i, isSat: true }).returning(); existing.set(t.code, r.id); }
-  console.log(`topics: ${existing.size}`);
+  let edges = 0;
+  for (const [t, reqs] of Object.entries(PREREQS)) for (const r of reqs) { const a = existing.get(topicCodeOf(t)), b = existing.get(topicCodeOf(r)); if (a && b) { await db.insert(schema.topicPrereqs).values({ topicId: a, requiresTopicId: b }).onConflictDoNothing(); edges += 1; } }
+  console.log(`topics: ${existing.size}, prerequisite edges: ${edges}`);
   // bank
   {
     const seen = new Set<string>(); let inserted = 0;

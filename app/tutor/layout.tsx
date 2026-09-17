@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { ClipboardList, LayoutDashboard, Users } from "lucide-react";
+import { CalendarDays, ClipboardList, LayoutDashboard, Library, Users } from "lucide-react";
 import { requireTutorPage } from "@/modules/auth/context";
 import { Logo } from "@/ui/shell/logo";
 import { SideLink, TabLink } from "@/ui/shell/nav-link";
@@ -12,6 +12,8 @@ export default async function TutorLayout({ children }: { children: React.ReactN
     { href: "/tutor", exact: true, icon: <LayoutDashboard />, label: t("dashboard") },
     { href: "/tutor/students", icon: <Users />, label: t("students") },
     { href: "/tutor/assessments", icon: <ClipboardList />, label: t("assessments") },
+    { href: "/tutor/questions", icon: <Library />, label: t("questions") },
+    { href: "/tutor/lessons", icon: <CalendarDays />, label: t("lessons") },
   ];
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[264px_1fr]">

@@ -23,5 +23,11 @@
   "emptyText": "Test yoki mashqni yakunla, kuchli va kuchsiz mavzularing shu yerda koʻrinadi.",
   "emptyGo": "Mashqqa oʻtish",
   "sat_group": "SAT Math",
-  "legend": "Rang holatni, son 0 dan 100 gacha darajani bildiradi"
+  "legend": "Rang holatni, son 0 dan 100 gacha darajani bildiradi",
+  "timeline": "Haftalik dinamika",
+  "timelineY": "Hafta davomida toʻgʻri javoblar ulushi, %",
+  "reason_weak": "kuchsiz mavzu",
+  "reason_prerequisite": "avval poydevor: «{topic}» shunga bogʻliq",
+  "reason_in_progress": "deyarli oʻzlashtirilgan",
+  "reason_review": "anchadan beri takrorlanmagan"
 }

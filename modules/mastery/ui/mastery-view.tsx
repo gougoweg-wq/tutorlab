@@ -7,6 +7,7 @@ import { Card, Stat } from "@/ui/card";
 import { Button } from "@/ui/button";
 import { EmptyState } from "@/ui/states";
 import { cn } from "@/ui/cn";
+import { LineChart } from "@/ui/charts/line-chart";
 
 const tone = { weak: "bg-bad-soft text-bad-text", strong: "bg-ok-soft text-ok-text", in_progress: "bg-warn-soft text-warn-text", low_data: "bg-surface-2 text-muted border border-dashed border-line-strong" } as const;
 const bar = { weak: "bg-bad", strong: "bg-ok", in_progress: "bg-warn", low_data: "bg-faint" } as const;
@@ -14,7 +15,8 @@ const bar = { weak: "bg-bad", strong: "bg-ok", in_progress: "bg-warn", low_data:
 /** Mastery map shared by the student's Progress page and the tutor's student page. */
 export async function MasteryView({ studentId, forStudent }: { studentId: string; forStudent: boolean }) {
   const t = await getTranslations("progress"); const c = await getTranslations("common");
-  const m = await getStudentMastery(studentId, await getLocale());
+  const locale = await getLocale();
+  const m = await getStudentMastery(studentId, locale);
   if (!m.topics.length) return <Card className="rise"><EmptyState icon={<MapIcon />} title={t("emptyTitle")} text={t("emptyText")} action={forStudent ? <Button asChild><Link href="/student/practice">{t("emptyGo")}</Link></Button> : undefined} /></Card>;
   const groups = new Map<string, TopicMastery[]>();
   for (const x of m.topics) { const k = x.isSat ? t("sat_group") : c("grade", { grade: x.grade ?? 0 }); groups.set(k, [...(groups.get(k) ?? []), x]); }
@@ -37,8 +39,13 @@ export async function MasteryView({ studentId, forStudent }: { studentId: string
       {m.next && (
         <section className="mt-8 rise rounded-xl bg-accent-soft p-6 sm:p-8 flex flex-wrap items-center gap-5" style={{ "--i": 1 } as React.CSSProperties}>
           <span className="grid place-items-center size-12 rounded-full bg-accent text-accent-ink"><Target className="size-5" /></span>
-          <div className="flex-1 min-w-[200px]"><div className="t-eyebrow text-accent-text">{t("next")}</div><div className="t-h2 mt-0.5">{m.next.name}</div><div className="t-small text-muted mt-0.5">{t(`status_${m.next.status}`)} · {m.next.mastery}</div></div>
+          <div className="flex-1 min-w-[200px]"><div className="t-eyebrow text-accent-text">{t("next")}</div><div className="t-h2 mt-0.5">{m.next.topic.name}</div><div className="t-small text-muted mt-0.5">{m.next.reason === "prerequisite" ? t("reason_prerequisite", { topic: m.next.unlocks ?? "" }) : t(`reason_${m.next.reason}`)} · {m.next.topic.mastery}</div></div>
           {forStudent && <Button asChild size="lg"><Link href="/student/practice">{t("nextGo")}</Link></Button>}
+        </section>)}
+      {m.timeline.length > 0 && (
+        <section className="mt-10 rise" style={{ "--i": 2 } as React.CSSProperties}>
+          <h2 className="t-h2 mb-4">{t("timeline")}</h2>
+          <Card className="p-5 sm:p-6"><LineChart label={t("timeline")} yLabel={t("timelineY")} points={m.timeline.map((w) => ({ x: new Date(w.week).toLocaleDateString(locale, { day: "numeric", month: "short" }), y: w.percent, hint: c("questionsCount", { n: w.n }) }))} /></Card>
         </section>)}
       <section className="mt-10 rise" style={{ "--i": 2 } as React.CSSProperties}>
         <h2 className="t-h2">{t("map")}</h2><p className="t-small text-muted mt-1 mb-5">{t("legend")}</p>

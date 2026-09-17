@@ -16,7 +16,7 @@ export async function createTestAction(input: unknown) {
     return r;
   });
 }
-export async function countForRuleAction(topicId: string, dmin: number, dmax: number) { return action(async () => { const ctx = await requireTutor(); return svc.countForRule(ctx.workspaceId, z.string().uuid().parse(topicId), dmin, dmax); }); }
+export async function countForRuleAction(topicId: string, dmin: number, dmax: number, types: string[] | null = null) { return action(async () => { const ctx = await requireTutor(); return svc.countForRule(ctx.workspaceId, z.string().uuid().parse(topicId), dmin, dmax, z.array(z.enum(["numeric", "single_choice"])).nullable().parse(types)); }); }
 export async function startAttemptAction(assignmentId: string) { return action(async () => svc.startAttempt(await requireStudent(), z.string().uuid().parse(assignmentId))); }
 export async function saveAnswerAction(attemptId: string, versionId: string, payload: unknown) {
   return action(async () => { const ctx = await requireStudent(); await rateLimit(`save:${attemptId}`, 240, 60); await svc.saveAnswer(ctx, attemptId, versionId, payload); });
