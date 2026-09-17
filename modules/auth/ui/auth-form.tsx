@@ -31,7 +31,7 @@ export function AuthForm({ mode, google, next }: { mode: "login" | "register"; g
     const email = String(fd.get("email") ?? "").trim(), password = String(fd.get("password") ?? ""), name = String(fd.get("name") ?? "").trim();
     const f: Record<string, string> = {};
     if (!/^\S+@\S+\.\S+$/.test(email)) f.email = te("email");
-    if (password.length < 8) f.password = te("passwordShort");
+    if (mode === "register" ? password.length < 8 : password.length === 0) f.password = te(mode === "register" ? "passwordShort" : "required");
     if (mode === "register" && name.length < 2) f.name = te("required");
     setFields(f); setError(null);
     if (Object.keys(f).length) return;
