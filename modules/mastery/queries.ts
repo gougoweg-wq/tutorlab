@@ -62,3 +62,15 @@ export async function weeklyTimeline(studentId: string, now = new Date()): Promi
     where a.student_id = ${studentId} and a.submitted_at is not null and a.submitted_at > ${new Date(now.getTime() - 84 * 86_400_000).toISOString()}::timestamptz
     group by 1 order by 1`));
 }
+
+/** Light-weight numbers for the Today page: today's answered items, streak and the 7-day activity row. */
+export async function todayStats(studentId: string, now = new Date()) {
+  const db = await getDb();
+  const fmt = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: TIMEZONE }).format(d);
+  const days = rows<{ day: string; n: number }>(await db.execute(sql`select to_char(day, 'YYYY-MM-DD') as day, items_answered as n from activity_days where student_id = ${studentId} order by day desc limit 60`));
+  const set = new Set(days.map((d) => d.day)); const today = days.find((d) => d.day === fmt(now))?.n ?? 0;
+  let streak = 0; const cur = new Date(now); if (!set.has(fmt(cur))) cur.setDate(cur.getDate() - 1);
+  while (set.has(fmt(cur))) { streak += 1; cur.setDate(cur.getDate() - 1); }
+  const week = Array.from({ length: 7 }, (_, i) => { const d = new Date(now); d.setDate(d.getDate() - (6 - i)); return { on: set.has(fmt(d)), label: new Intl.DateTimeFormat("ru-RU", { weekday: "narrow", timeZone: TIMEZONE }).format(d) }; });
+  return { today, goal: 10, streak, week };
+}

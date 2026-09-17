@@ -1,1 +1,16 @@
-{}
+{
+  "check": "Tekshirish",
+  "nextQ": "Keyingi",
+  "finish": "Yakunlash",
+  "right": "Toʻgʻri!",
+  "greatCombo": "Toʻgʻri! Ketma-ket {n} ta",
+  "wrong": "Unchalik emas",
+  "score": "{total} tadan {ok} tasi toʻgʻri",
+  "combo": "Ketma-ket toʻgʻri: {n}",
+  "goalTitle": "Kunlik maqsadgacha: {n}",
+  "goalDone": "Kunlik maqsad bajarildi",
+  "goalText": "Maqsad — kuniga {goal} ta masala.",
+  "goalGo": "Mashq qilish",
+  "goalAria": "Bugun {goal} tadan {n} tasi yechildi",
+  "streakDays": "kun ketma-ket"
+}

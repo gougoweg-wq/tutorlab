@@ -8,5 +8,10 @@
   "firstTitle": "Where to start",
   "step1": "Add a student and send an invitation",
   "step2": "Build a test from the bank or by rules",
-  "step3": "Assign it and watch the mastery map"
+  "step3": "Assign it and watch the mastery map",
+  "attention": "Who needs attention",
+  "recent": "Recent work",
+  "overdue": "overdue: {n}",
+  "lowAvg": "average {n}%",
+  "idle": "idle for {n} d"
 }

@@ -95,3 +95,28 @@ describe("mastery after grading", () => {
     expect(await withUser("stu1", async (tx) => rows(await tx.execute(sql`select 1 from mastery`)).length)).toBeGreaterThan(0);
   });
 });
+
+describe("instant feedback (practice only)", () => {
+  it("is refused for an assigned test, so the key cannot be fished out one item at a time", async () => {
+    const r = await svc.createTest(tutor, { title: "Контрольная", rules: [rule()], studentIds: [s2], dueAt: null });
+    const id = await svc.startAttempt(ctx2(), r.assignmentIds[0]); const a = await svc.getAttemptForStudent(ctx2(), id);
+    await expect(svc.checkItem(ctx2(), id, a.questions[0].versionId, { type: "numeric", raw: "1" })).rejects.toMatchObject({ code: "forbidden" });
+    expect(a.instant).toBe(false); expect(a.questions.every((q) => q.checked === null)).toBe(true);
+  });
+  it("locks the item, reveals the key only after the answer is in, and survives a resume", async () => {
+    const r = await svc.createBlueprintAssignment({ workspaceId: ws, studentId: s2, title: "Тренировка", rules: [rule()], createdBy: null, isPractice: true });
+    const id = await svc.startAttempt(ctx2(), r.assignmentId); const a = await svc.getAttemptForStudent(ctx2(), id);
+    expect(a.instant).toBe(true); expect(JSON.stringify(a)).not.toContain('"explanationMd"');
+    const v = a.questions[0].versionId;
+    const first = await svc.checkItem(ctx2(), id, v, { type: "numeric", raw: "123456" });
+    expect(first.isCorrect).toBe(false); expect(first.correct).toBeTruthy();
+    // a second try with the now-known key changes nothing
+    const again = await svc.checkItem(ctx2(), id, v, { type: "numeric", raw: first.correct });
+    expect(again.isCorrect).toBe(false);
+    await expect(svc.saveAnswer(ctx2(), id, v, { type: "numeric", raw: first.correct })).rejects.toMatchObject({ code: "conflict" });
+    await expect(svc.checkItem(ctx1(), id, v, { type: "numeric", raw: "1" })).rejects.toMatchObject({ code: "not_found" });
+    const resumed = await svc.getAttemptForStudent(ctx2(), id);
+    expect(resumed.questions[0].checked).toMatchObject({ isCorrect: false }); expect(resumed.questions[1].checked).toBeNull();
+    await svc.submitAttempt(ctx2(), id); expect((await svc.getResult(ctx2(), id)).items[0].isCorrect).toBe(false);
+  });
+});

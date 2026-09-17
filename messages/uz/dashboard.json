@@ -8,5 +8,10 @@
   "firstTitle": "Nimadan boshlash kerak",
   "step1": "Oʻquvchi qoʻshing va taklif yuboring",
   "step2": "Bankdan yoki qoidalar boʻyicha test tuzing",
-  "step3": "Testni tayinlang va oʻzlashtirish xaritasini kuzating"
+  "step3": "Testni tayinlang va oʻzlashtirish xaritasini kuzating",
+  "attention": "Kimga eʼtibor kerak",
+  "recent": "Soʻnggi ishlar",
+  "overdue": "muddati oʻtgan: {n}",
+  "lowAvg": "oʻrtacha {n}%",
+  "idle": "{n} kun shugʻullanmagan"
 }

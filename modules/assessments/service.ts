@@ -133,9 +133,41 @@ export async function getAttemptForStudent(ctx: StudentCtx, attemptId: string) {
     .from(schema.attemptItems).innerJoin(schema.questionVersions, eq(schema.questionVersions.id, schema.attemptItems.questionVersionId))
     .innerJoin(schema.questions, eq(schema.questions.id, schema.questionVersions.questionId))
     .where(eq(schema.attemptItems.attemptId, att.id)).orderBy(schema.attemptItems.sort);
-  const [asg] = await db.select({ title: schema.assessments.title }).from(schema.assignments).innerJoin(schema.assessments, eq(schema.assessments.id, schema.assignments.assessmentId)).where(eq(schema.assignments.id, att.assignmentId));
-  const questions: (PublicQuestion & { draft: AnswerPayload | null })[] = items.map((r) => ({ ...toPublic(r.v, r.type, r.item.optionOrder), draft: r.item.answer ?? null }));
-  return { id: att.id, title: asg?.title ?? "", status: att.status, submitted: Boolean(att.submittedAt), deadlineAt: att.deadlineAt?.toISOString() ?? null, serverNow: new Date().toISOString(), questions };
+  const [asg] = await db.select({ title: schema.assessments.title, isPractice: schema.assessments.isPractice }).from(schema.assignments).innerJoin(schema.assessments, eq(schema.assessments.id, schema.assignments.assessmentId)).where(eq(schema.assignments.id, att.assignmentId));
+  const instant = Boolean(asg?.isPractice);
+  const questions: (PublicQuestion & { draft: AnswerPayload | null; checked: CheckResult | null })[] = items.map((r) => ({ ...toPublic(r.v, r.type, r.item.optionOrder), draft: r.item.answer ?? null,
+    // only in instant-feedback practice, and only for items the student has already locked in
+    checked: instant && r.item.score !== null ? reveal(r.v, r.item.isCorrect) : null }));
+  return { instant, id: att.id, title: asg?.title ?? "", status: att.status, submitted: Boolean(att.submittedAt), deadlineAt: att.deadlineAt?.toISOString() ?? null, serverNow: new Date().toISOString(), questions };
+}
+
+export type CheckResult = { isCorrect: boolean; correct: string; explanationMd: string };
+function reveal(v: { options: typeof schema.questionVersions.$inferSelect.options; answer: typeof schema.questionVersions.$inferSelect.answer; explanationMd: string }, isCorrect: boolean | null): CheckResult {
+  const o = v.options; const all = !o ? [] : o.kind === "choices" ? o.choices : o.kind === "ordering" ? o.items : o.kind === "matching" ? [...o.left, ...o.right] : [];
+  return { isCorrect: Boolean(isCorrect), correct: describeAnswer(v.answer, (id) => all.find((x) => x.id === id)?.text ?? id), explanationMd: v.explanationMd };
+}
+
+/**
+ * Instant feedback for practice sets: locks the answer for ONE item, scores it on the server and only then reveals the key.
+ * Not available for assigned tests. A locked item cannot be answered again (saveAnswer rejects it).
+ */
+export async function checkItem(ctx: StudentCtx, attemptId: string, versionId: string, payloadRaw: unknown): Promise<CheckResult> {
+  const payload = answerPayloadSchema.parse(payloadRaw);
+  const db = await getDb();
+  const att = await ownAttempt(db, ctx, attemptId);
+  if (att.submittedAt) throw new AppError("already_submitted");
+  if (att.deadlineAt && att.deadlineAt.getTime() + 5000 < Date.now()) throw new AppError("deadline_passed");
+  const [a] = await db.select({ isPractice: schema.assessments.isPractice }).from(schema.assignments).innerJoin(schema.assessments, eq(schema.assessments.id, schema.assignments.assessmentId)).where(eq(schema.assignments.id, att.assignmentId));
+  if (!a?.isPractice) throw new AppError("forbidden");
+  const [row] = await db.select({ item: schema.attemptItems, v: schema.questionVersions, type: schema.questions.type }).from(schema.attemptItems)
+    .innerJoin(schema.questionVersions, eq(schema.questionVersions.id, schema.attemptItems.questionVersionId)).innerJoin(schema.questions, eq(schema.questions.id, schema.questionVersions.questionId))
+    .where(and(eq(schema.attemptItems.attemptId, att.id), eq(schema.attemptItems.questionVersionId, versionId)));
+  if (!row) throw new AppError("not_found");
+  if (row.item.score !== null) return reveal(row.v, row.item.isCorrect);
+  if (row.type !== payload.type) throw new AppError("validation");
+  const s = scoreAnswer(row.v.answer, payload, row.item.weight);
+  await db.update(schema.attemptItems).set({ answer: payload, answeredAt: new Date(), score: s.score, maxScore: s.maxScore, isCorrect: s.isCorrect }).where(and(eq(schema.attemptItems.id, row.item.id), isNull(schema.attemptItems.score)));
+  return reveal(row.v, s.isCorrect);
 }
 
 export async function saveAnswer(ctx: StudentCtx, attemptId: string, versionId: string, payloadRaw: unknown) {
@@ -146,8 +178,8 @@ export async function saveAnswer(ctx: StudentCtx, attemptId: string, versionId: 
   if (att.deadlineAt && att.deadlineAt.getTime() + 5000 < Date.now()) throw new AppError("deadline_passed");
   const [row] = await db.select({ type: schema.questions.type }).from(schema.questionVersions).innerJoin(schema.questions, eq(schema.questions.id, schema.questionVersions.questionId)).where(eq(schema.questionVersions.id, versionId));
   if (!row || row.type !== payload.type) throw new AppError("validation");
-  const upd = await db.update(schema.attemptItems).set({ answer: payload, answeredAt: new Date() }).where(and(eq(schema.attemptItems.attemptId, att.id), eq(schema.attemptItems.questionVersionId, versionId))).returning({ id: schema.attemptItems.id });
-  if (!upd.length) throw new AppError("not_found");
+  const upd = await db.update(schema.attemptItems).set({ answer: payload, answeredAt: new Date() }).where(and(eq(schema.attemptItems.attemptId, att.id), eq(schema.attemptItems.questionVersionId, versionId), isNull(schema.attemptItems.score))).returning({ id: schema.attemptItems.id });
+  if (!upd.length) throw new AppError("conflict");
 }
 
 export async function submitAttempt(ctx: StudentCtx, attemptId: string) {

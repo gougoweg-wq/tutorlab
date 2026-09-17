@@ -1,1 +1,16 @@
-{}
+{
+  "check": "Check",
+  "nextQ": "Next",
+  "finish": "Finish",
+  "right": "Correct!",
+  "greatCombo": "Correct! {n} in a row",
+  "wrong": "Not quite",
+  "score": "{ok} of {total} correct",
+  "combo": "Correct in a row: {n}",
+  "goalTitle": "{n} to go today",
+  "goalDone": "Daily goal reached",
+  "goalText": "The goal is {goal} problems a day. Consistency beats volume.",
+  "goalGo": "Practise",
+  "goalAria": "{n} of {goal} solved today",
+  "streakDays": "day streak"
+}

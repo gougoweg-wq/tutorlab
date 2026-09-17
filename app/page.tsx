@@ -41,6 +41,7 @@ export default async function Landing() {
             <p className="t-lead mt-7 max-w-[680px] mx-auto rise" style={{ "--i": 5 } as React.CSSProperties}>{t("heroLead")}</p>
             <div className="mt-9 flex flex-wrap justify-center gap-3 rise" style={{ "--i": 7 } as React.CSSProperties}>
               <Button asChild size="lg"><Link href="/register">{t("ctaPrimary")}</Link></Button>
+              <Button asChild size="lg" variant="secondary"><a href="/demo">{t("ctaDemo")}</a></Button>
               <Button asChild size="lg" variant="ghost"><a href="#how">{t("ctaSecondary")} <span aria-hidden>›</span></a></Button>
             </div>
           </div>

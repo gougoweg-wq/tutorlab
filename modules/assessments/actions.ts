@@ -40,3 +40,7 @@ export async function createPracticeAction(input: unknown) {
     return { attemptId };
   });
 }
+
+export async function checkItemAction(attemptId: string, versionId: string, payload: unknown) {
+  return action(async () => { const ctx = await requireStudent(); await rateLimit(`check:${attemptId}`, 120, 60); return svc.checkItem(ctx, attemptId, versionId, payload); });
+}
