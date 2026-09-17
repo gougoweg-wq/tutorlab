@@ -1,0 +1,23 @@
+{
+  "unauthorized": "Sign in to continue.",
+  "forbidden": "You don’t have access to this action.",
+  "not_found": "Not found. It may have been deleted.",
+  "validation": "Check the highlighted fields.",
+  "conflict": "The data has changed. Refresh the page.",
+  "rate_limited": "Too many attempts. Wait a minute and try again.",
+  "deadline_passed": "The deadline has passed; answers are no longer accepted.",
+  "already_submitted": "This work has already been submitted.",
+  "attempts_exhausted": "No attempts left.",
+  "budget_exceeded": "The AI generation budget is used up. Raise it in settings.",
+  "bank_too_small": "Not enough questions in the bank for these rules. Widen the topics or difficulty range.",
+  "internal": "Something broke on our side. Please try again.",
+  "pageTitle": "Something went wrong",
+  "pageText": "The error has been logged. Try refreshing the page.",
+  "notFoundTitle": "Page not found",
+  "notFoundText": "Check the address or go back home.",
+  "home": "Home",
+  "required": "Required",
+  "email": "Enter a valid email",
+  "passwordShort": "At least 8 characters",
+  "offline": "You’re offline. Answers will be saved when the connection is back."
+}

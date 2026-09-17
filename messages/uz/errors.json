@@ -1,0 +1,23 @@
+{
+  "unauthorized": "Davom etish uchun hisobga kiring.",
+  "forbidden": "Bu amal uchun ruxsatingiz yoʻq.",
+  "not_found": "Topilmadi. Balki oʻchirilgan.",
+  "validation": "Belgilangan maydonlarni tekshiring.",
+  "conflict": "Maʼlumot oʻzgargan. Sahifani yangilang.",
+  "rate_limited": "Juda koʻp urinish. Bir daqiqa kutib, qayta urinib koʻring.",
+  "deadline_passed": "Muddat tugadi, javoblar qabul qilinmaydi.",
+  "already_submitted": "Bu ish allaqachon topshirilgan.",
+  "attempts_exhausted": "Urinishlar tugadi.",
+  "budget_exceeded": "AI generatsiya limiti tugadi. Sozlamalarda oshiring.",
+  "bank_too_small": "Bu shartlar uchun bankda savol yetarli emas.",
+  "internal": "Bizning tomonda xatolik. Qayta urinib koʻring.",
+  "pageTitle": "Nimadir xato ketdi",
+  "pageText": "Xato qayd etildi. Sahifani yangilab koʻring.",
+  "notFoundTitle": "Sahifa topilmadi",
+  "notFoundText": "Manzilni tekshiring yoki bosh sahifaga qayting.",
+  "home": "Bosh sahifa",
+  "required": "Majburiy maydon",
+  "email": "Toʻgʻri email kiriting",
+  "passwordShort": "Kamida 8 ta belgi",
+  "offline": "Aloqa yoʻq. Aloqa tiklanganda javoblar saqlanadi."
+}

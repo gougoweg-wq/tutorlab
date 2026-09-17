@@ -1,0 +1,10 @@
+{
+  "title": "Name your workspace",
+  "lead": "This is the home for your students, tests and lessons. Students will see the name.",
+  "workspaceName": "Name",
+  "workspacePlaceholder": "e.g. Maths with Matvei",
+  "create": "Create workspace",
+  "studentHint": "Are you a student? Ask your tutor for an invite link and open it.",
+  "demo": "Fill with demo data",
+  "demoHint": "8 students with three months of history, so dashboards aren’t empty."
+}
