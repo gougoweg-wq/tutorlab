@@ -1,0 +1,18 @@
+{
+  "title": "Practice",
+  "lead": "Pick the topics yourself. New problems every time, review right after you submit.",
+  "weakEyebrow": "Recommended",
+  "weakTitle": "Your weak topics",
+  "weakGo": "Practise them",
+  "pick": "Pick topics",
+  "count": "How many",
+  "easy": "Easier",
+  "normal": "Normal",
+  "hard": "Harder",
+  "timed": "Timed",
+  "timedOn": "{n} min in total",
+  "timedOff": "no timer",
+  "picked": "Topics selected: {n}",
+  "pickHint": "Select one to eight topics",
+  "start": "Start"
+}

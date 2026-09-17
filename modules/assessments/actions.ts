@@ -22,3 +22,21 @@ export async function saveAnswerAction(attemptId: string, versionId: string, pay
   return action(async () => { const ctx = await requireStudent(); await rateLimit(`save:${attemptId}`, 240, 60); await svc.saveAnswer(ctx, attemptId, versionId, payload); });
 }
 export async function submitAttemptAction(attemptId: string) { return action(async () => { const ctx = await requireStudent(); await rateLimit(`submit:${attemptId}`, 10, 60); await svc.submitAttempt(ctx, attemptId); revalidatePath("/student"); }); }
+
+/** Student builds their own practice set: picks topics, size and difficulty. */
+export async function createPracticeAction(input: unknown) {
+  return action(async () => {
+    const ctx = await requireStudent();
+    const d = z.object({ topicIds: z.array(z.string().uuid()).min(1).max(8), count: z.coerce.number().int().min(3).max(30), level: z.enum(["easy", "normal", "hard"]), timed: z.boolean().default(false) }).parse(input);
+    await rateLimit(`practice:${ctx.studentId}`, 30, 3600);
+    const [dmin, dmax] = d.level === "easy" ? [1, 3] : d.level === "hard" ? [3, 5] : [2, 4];
+    const base = Math.floor(d.count / d.topicIds.length); let extra = d.count % d.topicIds.length;
+    const rules = d.topicIds.map((topicId) => ({ topicId, includeSubtree: true, count: base + (extra-- > 0 ? 1 : 0), difficultyMin: dmin, difficultyMax: dmax, types: null })).filter((r) => r.count > 0);
+    const names = await svc.topicNames(d.topicIds);
+    const r = await svc.createTest({ user: { id: ctx.user.id }, workspaceId: ctx.workspaceId }, { title: names.slice(0, 2).join(", ") + (names.length > 2 ? ` +${names.length - 2}` : ""), rules, studentIds: [ctx.studentId], dueAt: null, isPractice: true, createdBy: null,
+      settings: { ...DEFAULT_SETTINGS, maxAttempts: 3, layout: "list", timeLimitMin: d.timed ? Math.max(5, Math.round(d.count * 1.6)) : null } });
+    const attemptId = await svc.startAttempt(ctx, r.assignmentIds[0]);
+    revalidatePath("/student");
+    return { attemptId };
+  });
+}

@@ -195,3 +195,21 @@ export async function topicsForPicker(workspaceId: string, locale = "ru") {
   const list = await db.select().from(schema.topics).where(or(isNull(schema.topics.workspaceId), eq(schema.topics.workspaceId, workspaceId))).orderBy(schema.topics.grade, schema.topics.sort);
   return list.filter((t) => t.depth > 0).map((t) => ({ id: t.id, code: t.code, grade: t.grade, name: (t.name as Record<string, string>)[locale] ?? t.name.ru }));
 }
+
+export async function topicNames(ids: string[], locale = "ru"): Promise<string[]> {
+  const db = await getDb();
+  const list = await db.select({ id: schema.topics.id, name: schema.topics.name }).from(schema.topics).where(inArray(schema.topics.id, ids));
+  return ids.map((id) => { const n = list.find((t) => t.id === id)?.name as Record<string, string> | undefined; return n?.[locale] ?? n?.ru ?? ""; }).filter(Boolean);
+}
+
+/** Topics a student may practise, with how many published questions each has and the student's own accuracy so far. */
+export async function practiceTopics(ctx: StudentCtx, locale = "ru") {
+  const db = await getDb();
+  const list = rows<{ id: string; code: string; grade: number | null; name: Record<string, string>; isSat: boolean; bank: number; done: number; ok: number }>(await db.execute(sql`
+    select t.id, t.code, t.grade, t.name, t.is_sat as "isSat",
+      (select count(*)::int from question_topics qt join questions q on q.id=qt.question_id where qt.topic_id=t.id and q.status='published' and q.deleted_at is null and (q.workspace_id is null or q.workspace_id=${ctx.workspaceId})) as bank,
+      (select count(*)::int from attempt_items ai join attempts a on a.id=ai.attempt_id join question_versions qv on qv.id=ai.question_version_id join question_topics qt on qt.question_id=qv.question_id where a.student_id=${ctx.studentId} and a.submitted_at is not null and qt.topic_id=t.id) as done,
+      (select count(*)::int from attempt_items ai join attempts a on a.id=ai.attempt_id join question_versions qv on qv.id=ai.question_version_id join question_topics qt on qt.question_id=qv.question_id where a.student_id=${ctx.studentId} and a.submitted_at is not null and ai.is_correct and qt.topic_id=t.id) as ok
+    from topics t where t.depth > 0 and (t.workspace_id is null or t.workspace_id=${ctx.workspaceId}) order by t.is_sat, t.grade, t.sort`));
+  return list.filter((t) => t.bank >= 3).map((t) => ({ id: t.id, grade: t.grade, isSat: t.isSat, name: t.name[locale] ?? t.name.ru, bank: t.bank, done: t.done, percent: t.done ? Math.round((t.ok / t.done) * 100) : null }));
+}

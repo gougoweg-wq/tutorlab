@@ -8,7 +8,7 @@ export const LOCALE_NAMES: Record<Locale, string> = { ru: "Русский", en: 
 export const NAMESPACES = [
   "common", "nav", "errors", "auth", "onboarding", "landing",
   "students", "catalog", "questions", "generator", "assessments", "attempt",
-  "progress", "dashboard", "lessons", "notifications", "settings", "parent",
+  "progress", "practice", "dashboard", "lessons", "notifications", "settings", "parent",
 ] as const;
 export type Namespace = (typeof NAMESPACES)[number];
 

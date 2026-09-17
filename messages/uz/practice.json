@@ -1,0 +1,18 @@
+{
+  "title": "Mashq",
+  "lead": "Mavzularni oʻzing tanla. Har safar yangi masalalar, topshirgach darhol tahlil.",
+  "weakEyebrow": "Tavsiya",
+  "weakTitle": "Kuchsiz mavzularing",
+  "weakGo": "Shularni mashq qilish",
+  "pick": "Mavzularni tanla",
+  "count": "Nechta masala",
+  "easy": "Osonroq",
+  "normal": "Oddiy",
+  "hard": "Qiyinroq",
+  "timed": "Vaqtga",
+  "timedOn": "jami {n} daq",
+  "timedOff": "taymersiz",
+  "picked": "Tanlangan mavzular: {n}",
+  "pickHint": "Bittadan sakkiztagacha mavzu belgila",
+  "start": "Boshlash"
+}
