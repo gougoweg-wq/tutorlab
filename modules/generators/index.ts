@@ -1,10 +1,13 @@
 import { TOPICS, G, withSeed } from "./legacy";
+import { SAT, buildSat } from "./sat";
 import { questionDraftSchema, type QuestionDraft, type QuestionType } from "@/modules/questions/types";
 
 export type GeneratorMeta = { id: string; topicCode: string; title: { ru: string; en?: string }; grade: number | null; types: QuestionType[]; difficulties: number[]; language: "ru" | "en"; isSat: boolean; wordProblem: boolean };
 
 export const topicCodeOf = (id: string) => { const [g, n] = id.split("."); return `MATH.${g}.T${n}`; };
 const METAS: GeneratorMeta[] = TOPICS.map((t) => ({ id: `math-${t.id}`, topicCode: topicCodeOf(t.id), title: { ru: t.n }, grade: t.g, types: ["numeric"], difficulties: [2, 3, 4], language: "ru", isSat: false, wordProblem: Boolean(t.w) }));
+
+METAS.push(...Object.entries(SAT).map(([id, g]): GeneratorMeta => ({ id, topicCode: g.topic, title: { ru: g.title, en: g.title }, grade: null, types: ["numeric"], difficulties: [2, 3, 4], language: "en", isSat: true, wordProblem: false })));
 
 export const listGenerators = () => METAS;
 export const getGenerator = (id: string) => METAS.find((m) => m.id === id);
@@ -13,12 +16,12 @@ export const getGenerator = (id: string) => METAS.find((m) => m.id === id);
 export function generateOne(id: string, opts: { seed: number; difficulty?: number }): QuestionDraft {
   const meta = getGenerator(id);
   if (!meta) throw new Error(`unknown generator ${id}`);
-  const q = withSeed(opts.seed, () => G[id.replace("math-", "")]());
+  const q = meta.isSat ? buildSat(id, opts.seed) : withSeed(opts.seed, () => G[id.replace("math-", "")]());
   const rounded = q.ans.some((v) => !Number.isInteger(v));
   return questionDraftSchema.parse({
     type: "numeric", stemMd: q.text.replace(/<br>/g, "\n\n"), explanationMd: q.hint,
     answer: { type: "numeric", values: q.ans, tolerance: rounded ? 0.001 : 1e-6, relTolerance: 0, ordered: Boolean(q.ordered) },
-    difficulty: opts.difficulty ?? 3, grade: meta.grade ?? undefined, language: "ru", topicCodes: [meta.topicCode], tags: meta.wordProblem ? ["текстовая"] : [],
+    difficulty: opts.difficulty ?? 3, grade: meta.grade ?? undefined, language: meta.language, topicCodes: [meta.topicCode], tags: meta.wordProblem ? ["текстовая"] : [],
   });
 }
 
