@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { ChartNoAxesColumn, Dumbbell, House } from "lucide-react";
+import { House } from "lucide-react";
 import { requireStudentPage } from "@/modules/auth/context";
 import { Logo } from "@/ui/shell/logo";
 import { TabLink, TopLink } from "@/ui/shell/nav-link";
@@ -10,8 +10,6 @@ export default async function StudentLayout({ children }: { children: React.Reac
   const t = await getTranslations("nav");
   const links = [
     { href: "/student", exact: true, icon: <House />, label: t("today") },
-    { href: "/student/practice", icon: <Dumbbell />, label: t("practice") },
-    { href: "/student/progress", icon: <ChartNoAxesColumn />, label: t("progress") },
   ];
   return (
     <div className="min-h-dvh">
