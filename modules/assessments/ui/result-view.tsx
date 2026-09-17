@@ -1,14 +1,14 @@
 "use client";
 import * as React from "react";
 import { useTranslations } from "next-intl";
-import { Check, X } from "lucide-react";
+import { Check, TrendingDown, TrendingUp, X } from "lucide-react";
 import { Card } from "@/ui/card";
 import { Badge } from "@/ui/badge";
 import { ProgressBar } from "@/ui/states";
 import { Segmented } from "@/ui/tabs";
 import { cn } from "@/ui/cn";
 
-export type ResultData = { title: string; student: string; percent: number; passPercent: number; items: { id: string; stemHtml: string; explanationHtml: string | null; topic: string; given: string; isCorrect: boolean | null; correct: string | null }[]; topics: { name: string; ok: number; total: number }[] };
+export type ResultData = { title: string; student: string; percent: number; passPercent: number; gains: { name: string; delta: number }[]; items: { id: string; stemHtml: string; explanationHtml: string | null; topic: string; given: string; isCorrect: boolean | null; correct: string | null }[]; topics: { name: string; ok: number; total: number }[] };
 
 function Ring({ value }: { value: number }) {
   const r = 54, c = 2 * Math.PI * r; const [v, setV] = React.useState(0);
@@ -23,6 +23,15 @@ function Ring({ value }: { value: number }) {
   );
 }
 
+/** A short, tasteful burst for a strong result. Pure CSS, skipped entirely under prefers-reduced-motion. */
+function Confetti() {
+  const pieces = React.useMemo(() => Array.from({ length: 28 }, (_, i) => ({ i, x: (i * 37) % 100, d: (i * 53) % 40, r: (i * 71) % 360, c: ["var(--accent)", "var(--ok)", "var(--warn)", "var(--bad)"][i % 4] })), []);
+  return (<div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-0 motion-reduce:hidden">
+    <style>{`@keyframes tl-fall{0%{transform:translate3d(0,-20px,0) rotate(0);opacity:0}12%{opacity:1}100%{transform:translate3d(var(--dx),340px,0) rotate(var(--rot));opacity:0}}`}</style>
+    {pieces.map((p) => <span key={p.i} className="absolute top-0 block w-[7px] h-[12px] rounded-[2px]" style={{ left: `${p.x}%`, background: p.c, ["--dx" as string]: `${(p.i % 2 ? 1 : -1) * (20 + p.d)}px`, ["--rot" as string]: `${p.r + 360}deg`, animation: `tl-fall ${1.5 + p.d / 40}s var(--ease) ${p.d * 12}ms both` }} />)}
+  </div>);
+}
+
 export function ResultView({ data, footer }: { data: ResultData; footer?: React.ReactNode }) {
   const t = useTranslations("attempt");
   const [filter, setFilter] = React.useState<"all" | "wrong">("all");
@@ -30,7 +39,8 @@ export function ResultView({ data, footer }: { data: ResultData; footer?: React.
   const shown = data.items.map((it, n) => ({ it, n })).filter(({ it }) => filter === "all" || !it.isCorrect);
   return (
     <div>
-      <Card className="p-7 sm:p-9 flex flex-col sm:flex-row items-center gap-7 rise">
+      <Card className="relative overflow-hidden p-7 sm:p-9 flex flex-col sm:flex-row items-center gap-7 rise">
+        {data.percent >= 80 && <Confetti />}
         <Ring value={data.percent} />
         <div className="text-center sm:text-left">
           <div className="t-eyebrow">{t("resultTitle")}</div>
@@ -39,6 +49,13 @@ export function ResultView({ data, footer }: { data: ResultData; footer?: React.
           <Badge className="mt-3" tone={data.percent >= data.passPercent ? "ok" : "bad"}>{t(data.percent >= data.passPercent ? "passed" : "failed")}</Badge>
         </div>
       </Card>
+      {!!data.gains.length && (
+        <section className="mt-8 rise" style={{ "--i": 1 } as React.CSSProperties}>
+          <h2 className="t-h2 mb-4">{t("gains")}</h2>
+          <div className="flex flex-wrap gap-2">{data.gains.map((g, k) => (
+            <span key={g.name} className={cn("pop inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-[14px] font-medium", g.delta > 0 ? "bg-ok-soft text-ok-text" : "bg-bad-soft text-bad-text")} style={{ animationDelay: `${300 + k * 90}ms` }}>
+              {g.delta > 0 ? <TrendingUp className="size-4" /> : <TrendingDown className="size-4" />}{g.name}<span className="tnum font-bold">{g.delta > 0 ? "+" : "−"}{Math.abs(g.delta)}</span></span>))}</div>
+        </section>)}
       <section className="mt-8 rise" style={{ "--i": 1 } as React.CSSProperties}>
         <h2 className="t-h2 mb-4">{t("byTopic")}</h2>
         <Card className="p-6 space-y-4">{data.topics.map((tp) => { const p = (tp.ok / tp.total) * 100; return (

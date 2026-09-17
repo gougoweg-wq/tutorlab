@@ -1,1 +1,16 @@
-{}
+{
+  "title": "Students",
+  "lead": "Add a student and send them an invite link.",
+  "add": "Add student",
+  "name": "Name",
+  "grade": "Grade",
+  "status": "Status",
+  "active": "Active",
+  "invited": "Awaiting invite",
+  "invite": "Invite link",
+  "inviteTitle": "Invitation ready",
+  "inviteText": "Send the link to the student. It works once and expires in 14 days.",
+  "emptyTitle": "No students yet",
+  "emptyText": "Add your first student to assign tests and see progress.",
+  "code": "Code"
+}

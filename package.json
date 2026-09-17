@@ -17,7 +17,8 @@
     "db:reset": "rm -rf .data && npm run db:migrate && npm run db:seed",
     "setup": "npm run db:migrate && npm run db:seed",
     "db:owner": "tsx --conditions=react-server db/seeds/owner.ts",
-    "db:guest": "tsx --conditions=react-server db/seeds/guest.ts"
+    "db:guest": "tsx --conditions=react-server db/seeds/guest.ts",
+    "share": "sh scripts/share.sh"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",

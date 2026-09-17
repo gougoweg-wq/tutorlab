@@ -1,1 +1,16 @@
-{}
+{
+  "title": "Oʻquvchilar",
+  "lead": "Oʻquvchi qoʻshing va unga taklif havolasini yuboring.",
+  "add": "Oʻquvchi qoʻshish",
+  "name": "Ism",
+  "grade": "Sinf",
+  "status": "Holat",
+  "active": "Faol",
+  "invited": "Taklif kutilmoqda",
+  "invite": "Taklif havolasi",
+  "inviteTitle": "Taklif tayyor",
+  "inviteText": "Havolani oʻquvchiga yuboring. U bir martalik va 14 kun amal qiladi.",
+  "emptyTitle": "Hozircha oʻquvchilar yoʻq",
+  "emptyText": "Test tayinlash va natijalarni koʻrish uchun birinchi oʻquvchini qoʻshing.",
+  "code": "Kod"
+}

@@ -222,7 +222,11 @@ export async function getResult(ctx: { workspaceId: string; studentId?: string |
   });
   const byTopic = new Map<string, { ok: number; total: number }>();
   for (const i of items) { const t = byTopic.get(i.topic) ?? { ok: 0, total: 0 }; t.total += 1; if (i.isCorrect) t.ok += 1; byTopic.set(i.topic, t); }
-  return { id: att.id, title: meta.title, student: meta.student, assignmentId: meta.assignmentId, percent: att.percent ?? 0, score: att.score ?? 0, maxScore: att.maxScore ?? 0, passPercent: meta.settings.passPercent, status: att.status, items, topics: [...byTopic].map(([name, v]) => ({ name, ...v })).sort((a, b) => a.ok / a.total - b.ok / b.total) };
+  const gains = rows<{ name: Record<string, string>; before: number; after: number }>(await db.execute(sql`
+    select t.name, min(me.theta_before)::float as before, max(me.theta_after)::float as after from mastery_events me join topics t on t.id = me.topic_id
+    where me.attempt_item_id in (select id from attempt_items where attempt_id = ${att.id}) group by t.id, t.name`))
+    .map((g) => ({ name: g.name[locale] ?? g.name.ru, delta: Math.round(100 / (1 + Math.exp(-g.after))) - Math.round(100 / (1 + Math.exp(-g.before))) })).filter((g) => g.delta !== 0).sort((a, b) => b.delta - a.delta);
+  return { gains, id: att.id, title: meta.title, student: meta.student, assignmentId: meta.assignmentId, percent: att.percent ?? 0, score: att.score ?? 0, maxScore: att.maxScore ?? 0, passPercent: meta.settings.passPercent, status: att.status, items, topics: [...byTopic].map(([name, v]) => ({ name, ...v })).sort((a, b) => a.ok / a.total - b.ok / b.total) };
 }
 
 export async function topicsForPicker(workspaceId: string, locale = "ru") {

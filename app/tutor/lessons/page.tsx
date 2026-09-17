@@ -11,9 +11,11 @@ import { Badge } from "@/ui/badge";
 import { EmptyState } from "@/ui/states";
 import { RichText } from "@/ui/rich-text";
 import { NewLesson, LessonActions } from "@/modules/lessons/ui/lesson-ui";
+import { WeekGrid } from "@/modules/lessons/ui/week-grid";
 import { cn } from "@/ui/cn";
 
-export default async function LessonsPage() {
+export default async function LessonsPage({ searchParams }: { searchParams: Promise<{ w?: string }> }) {
+  const offset = Math.max(-26, Math.min(26, Number((await searchParams).w) || 0));
   const ctx = await requireTutorPage(); const locale = await getLocale();
   const t = await getTranslations("lessons"); const f = await getFormatter();
   const [lessons, topics, students] = await Promise.all([listLessons(ctx, locale), topicsForPicker(ctx.workspaceId, locale),
@@ -23,7 +25,7 @@ export default async function LessonsPage() {
   const past = lessons.filter((l) => !upcoming.includes(l));
   const create = <NewLesson topics={topics} students={students} />;
   const Row = ({ l }: { l: (typeof lessons)[number] }) => { const d = new Date(l.startsAt); return (
-    <Card className={cn("p-5 sm:p-6 grid sm:grid-cols-[92px_1fr_auto] gap-4 items-start", l.status === "cancelled" && "opacity-60")}>
+    <Card id={`lesson-${l.id}`} className={cn("scroll-mt-24 p-5 sm:p-6 grid sm:grid-cols-[92px_1fr_auto] gap-4 items-start", l.status === "cancelled" && "opacity-60")}>
       <div><div className="text-[28px] font-bold leading-none tracking-[-0.03em] tnum">{f.dateTime(d, { day: "numeric" })}</div><div className="t-caption mt-1">{f.dateTime(d, { month: "short", weekday: "short" })}</div><div className="mt-2 text-[15px] font-semibold tnum">{f.dateTime(d, { hour: "2-digit", minute: "2-digit" })}</div></div>
       <div className="min-w-0"><div className="t-h3">{l.students.map((s) => s.name).join(", ")}</div>
         <div className="mt-2 flex flex-wrap gap-1.5">{l.topics.map((n) => <Badge key={n} tone="accent">{n}</Badge>)}<Badge>{l.durationMin} {t("min")}</Badge>
@@ -36,6 +38,7 @@ export default async function LessonsPage() {
     <div>
       <PageHeader title={t("title")} lead={t("lead")} actions={create} />
       {!lessons.length ? <Card className="rise"><EmptyState icon={<CalendarDays />} title={t("emptyTitle")} text={t("emptyText")} action={create} /></Card> : (<>
+        <section className="rise mb-10"><WeekGrid offset={offset} locale={locale} labels={{ prev: t("prevWeek"), next: t("nextWeek"), today: t("thisWeek") }} lessons={lessons.map((l) => ({ id: l.id, startsAt: l.startsAt, durationMin: l.durationMin, status: l.status, title: l.students.map((x) => x.name).join(", "), sub: l.topics.join(", ") }))} /></section>
         <section className="rise"><h2 className="t-h2 mb-4">{t("upcoming")}</h2><div className="space-y-3">{upcoming.length ? upcoming.map((l) => <Row key={l.id} l={l} />) : <p className="text-muted">{t("noUpcoming")}</p>}</div></section>
         {!!past.length && <section className="mt-10 rise" style={{ "--i": 1 } as React.CSSProperties}><h2 className="t-h2 mb-4">{t("past")}</h2><div className="space-y-3">{past.map((l) => <Row key={l.id} l={l} />)}</div></section>}</>)}
     </div>

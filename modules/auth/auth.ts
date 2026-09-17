@@ -13,6 +13,8 @@ async function build() {
   return betterAuth({
     baseURL: process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
     secret: process.env.BETTER_AUTH_SECRET,
+    // the public address changes with every quick tunnel; extra origins come from TRUSTED_ORIGINS (comma separated)
+    trustedOrigins: ["https://*.trycloudflare.com", ...(process.env.TRUSTED_ORIGINS?.split(",").map((o) => o.trim()).filter(Boolean) ?? [])],
     database: drizzleAdapter(db, { provider: "pg", schema: { user: schema.user, session: schema.session, account: schema.account, verification: schema.verification } }),
     user: { additionalFields: { locale: { type: "string", required: false, defaultValue: "ru", input: true } }, deleteUser: { enabled: true } },
     emailAndPassword: {

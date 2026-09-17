@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { toast } from "sonner";
-import { ArrowRight, Check, Flame, X } from "lucide-react";
+import { ArrowRight, Check, Flame, Volume2, VolumeX, X } from "lucide-react";
 import { checkItemAction, submitAttemptAction } from "@/modules/assessments/actions";
 import type { AnswerPayload } from "@/modules/questions/types";
 import { Button } from "@/ui/button";
@@ -15,6 +15,19 @@ type Checked = { isCorrect: boolean; correct: string; explanationHtml: string };
 type Q = { versionId: string; type: "numeric" | "single_choice"; choices?: { id: string; html: string }[]; stemHtml: string; expectedValues?: number; unit?: string; draft: string; checked: Checked | null };
 const EASE = [0.28, 0.11, 0.32, 1] as const;
 
+/** Two-note chime synthesised with WebAudio (no audio files) + a short vibration on phones. */
+function feedback(ok: boolean, sound: boolean) {
+  try { navigator.vibrate?.(ok ? 18 : [30, 40, 30]); } catch { /* unsupported */ }
+  if (!sound) return;
+  try {
+    const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext; if (!AC) return;
+    const ctx = new AC(); const notes = ok ? [660, 880] : [330, 247];
+    notes.forEach((f, i) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = ok ? "sine" : "triangle"; o.frequency.value = f; const t0 = ctx.currentTime + i * 0.11;
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.16, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22); o.connect(g).connect(ctx.destination); o.start(t0); o.stop(t0 + 0.24); });
+    setTimeout(() => void ctx.close(), 700);
+  } catch { /* audio blocked */ }
+}
+
 /** One question at a time with instant, server-side checking — for practice sets only. */
 export function PracticePlayer({ attemptId, title, questions, renderExplanation }: { attemptId: string; title: string; questions: Q[]; renderExplanation: (md: string) => Promise<string> }) {
   const t = useTranslations("attempt"); const te = useTranslations("errors");
@@ -24,6 +37,8 @@ export function PracticePlayer({ attemptId, title, questions, renderExplanation 
   const [values, setValues] = React.useState<Record<string, string>>(() => Object.fromEntries(questions.map((q) => [q.versionId, q.draft])));
   const [results, setResults] = React.useState<Record<string, Checked>>(() => Object.fromEntries(questions.filter((q) => q.checked).map((q) => [q.versionId, q.checked!])));
   const [pending, setPending] = React.useState(false); const [finishing, setFinishing] = React.useState(false);
+  const [sound, setSound] = React.useState(true);
+  React.useEffect(() => { try { setSound(localStorage.getItem("tl:sound") !== "off"); } catch { /* ignore */ } }, []);
   const q = questions[i]; const res = results[q.versionId]; const value = values[q.versionId] ?? "";
   const inputRef = React.useRef<HTMLInputElement>(null);
   const done = Object.keys(results).length; const right = Object.values(results).filter((r) => r.isCorrect).length;
@@ -37,9 +52,10 @@ export function PracticePlayer({ attemptId, title, questions, renderExplanation 
     const r = await checkItemAction(attemptId, q.versionId, payload).catch(() => null); setPending(false);
     if (!r) { toast.error(te("offline")); return; }
     if (!r.ok) { if (r.error.code === "already_submitted" || r.error.code === "deadline_passed") { router.replace(`/student/attempt/${attemptId}/result`); return; } toast.error(te(r.error.code)); return; }
+    feedback(r.data.isCorrect, sound);
     const explanationHtml = r.data.explanationMd ? await renderExplanation(r.data.explanationMd) : "";
     setResults((p) => ({ ...p, [q.versionId]: { isCorrect: r.data.isCorrect, correct: r.data.correct, explanationHtml } }));
-  }, [attemptId, pending, q, renderExplanation, res, router, te, value]);
+  }, [attemptId, pending, q, renderExplanation, res, router, sound, te, value]);
 
   const next = React.useCallback(async () => {
     if (i < questions.length - 1) { setI(i + 1); return; }
@@ -58,6 +74,7 @@ export function PracticePlayer({ attemptId, title, questions, renderExplanation 
         <div className="flex-1 h-2 rounded-full bg-surface-3 overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={questions.length} aria-valuenow={done} aria-label={t("answered", { n: done, total: questions.length })}>
           <div className="h-full rounded-full bg-accent transition-[width] duration-700 ease-apple" style={{ width: `${(done / questions.length) * 100}%` }} /></div>
         <span className="t-small tnum text-muted">{Math.min(i + 1, questions.length)}/{questions.length}</span>
+        <button type="button" aria-pressed={sound} aria-label={t("sound")} onClick={() => setSound((v) => { try { localStorage.setItem("tl:sound", v ? "off" : "on"); } catch { /* ignore */ } return !v; })} className="grid place-items-center size-9 -my-1 rounded-full text-muted hover:bg-surface-3/60 transition-colors">{sound ? <Volume2 className="size-[18px]" /> : <VolumeX className="size-[18px]" />}</button>
         <span className={cn("inline-flex items-center gap-1 text-[15px] font-semibold tnum transition-colors duration-300", combo >= 2 ? "text-warn-text" : "text-faint")} aria-label={t("combo", { n: combo })}><Flame className={cn("size-[18px] transition-transform duration-300 ease-spring", combo >= 2 && "scale-125")} />{combo}</span>
       </div>
       <p className="t-caption mt-4">{title}</p>
