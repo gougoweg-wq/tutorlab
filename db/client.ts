@@ -28,7 +28,7 @@ async function create(): Promise<DB> {
   const { drizzle } = await import("drizzle-orm/pglite");
   const dir = PGLITE_DIR === "memory" ? undefined : PGLITE_DIR;
   if (dir) { const fs = await import("node:fs"); fs.mkdirSync(dir, { recursive: true }); }
-  const client = new PGlite(dir, { extensions: { pg_trgm } });
+  const client = new PGlite({ dataDir: dir ?? "memory://", extensions: { pg_trgm } });
   g.__tutorlab_close = () => client.close();
   return drizzle(client, { schema }) as unknown as DB;
 }

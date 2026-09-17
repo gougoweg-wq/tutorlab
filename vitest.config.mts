@@ -9,6 +9,7 @@ export default defineConfig({
     include: ["tests/unit/**/*.test.ts", "tests/integration/**/*.test.ts"],
     testTimeout: 60_000,
     pool: "forks",
+    server: { deps: { external: [/@electric-sql\/pglite/] } },
     env: { PGLITE_DIR: "memory", BETTER_AUTH_SECRET: "test-secret-test-secret-test-secret" },
   },
   resolve: { alias: { "@": root, "server-only": path.join(root, "tests/helpers/server-only.ts") } },
