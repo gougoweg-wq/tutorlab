@@ -1,1 +1,12 @@
-{}
+{
+  "title": "Overview",
+  "lead": "Workspace “{workspace}”",
+  "students": "Students",
+  "assessments": "Tests",
+  "attempts": "Submitted works",
+  "bank": "Questions in the bank",
+  "firstTitle": "Where to start",
+  "step1": "Add a student and send an invitation",
+  "step2": "Build a test from the bank or by rules",
+  "step3": "Assign it and watch the mastery map"
+}

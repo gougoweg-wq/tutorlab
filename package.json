@@ -15,7 +15,8 @@
     "db:migrate": "tsx db/migrate.ts",
     "db:seed": "tsx db/seeds/run.ts",
     "db:reset": "rm -rf .data && npm run db:migrate && npm run db:seed",
-    "setup": "npm run db:migrate && npm run db:seed"
+    "setup": "npm run db:migrate && npm run db:seed",
+    "db:owner": "tsx db/seeds/owner.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
