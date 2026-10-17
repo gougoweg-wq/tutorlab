@@ -1,0 +1,9 @@
+{
+  "name": "TutorLab",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "hostRequirements": { "cpus": 2, "memory": "8gb" },
+  "postCreateCommand": "sh scripts/up.sh setup",
+  "postStartCommand": "nohup sh scripts/up.sh start > /tmp/tutorlab.log 2>&1 &",
+  "forwardPorts": [3000],
+  "portsAttributes": { "3000": { "label": "TutorLab", "onAutoForward": "openBrowser" } }
+}
