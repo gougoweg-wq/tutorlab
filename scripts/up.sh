@@ -9,6 +9,9 @@ if [ -n "$CODESPACE_NAME" ]; then URL="https://${CODESPACE_NAME}-${PORT}.${GITHU
 rand() { node -e "console.log(require('crypto').randomBytes($1).toString('base64url'))"; }
 # дописывает переменную в .env.local, только если её там ещё нет
 env_default() { grep -q "^$1=" .env.local 2>/dev/null || echo "$1=$2" >> .env.local; }
+# сборка помечается коммитом, из которого сделана; после git pull / checkout она пересобирается
+HEAD_REV="$(git rev-parse HEAD 2>/dev/null || echo none)"
+build_if_stale() { [ -f .next/BUILD_ID ] && [ "$(cat .next/.built-from 2>/dev/null)" = "$HEAD_REV" ] || { npm run build && echo "$HEAD_REV" > .next/.built-from; }; }
 
 case "$1" in
   setup)
@@ -23,12 +26,16 @@ case "$1" in
     env_default GUEST_EMAIL guest@tutorlab.app
     env_default GUEST_PASSWORD "$(rand 12)"
     if [ ! -d .data/pg ]; then npm run setup && npm run db:owner && npm run db:guest; fi
-    [ -f .next/BUILD_ID ] || npm run build
+    build_if_stale
     sh scripts/up.sh info
     ;;
   start)
     pgrep -f "next start" >/dev/null && exit 0
-    [ -f .next/BUILD_ID ] || npm run build
+    if command -v lsof >/dev/null && lsof -iTCP:$PORT -sTCP:LISTEN >/dev/null 2>&1; then
+      echo "Порт $PORT уже занят:"; lsof -nP -iTCP:$PORT -sTCP:LISTEN
+      echo "Остановите его: kill \$(lsof -t -iTCP:$PORT -sTCP:LISTEN)"; exit 1
+    fi
+    build_if_stale
     exec npx next start -p "$PORT"
     ;;
   info)
